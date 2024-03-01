@@ -3,3 +3,4 @@ faiss-cpu
 streamlit
 openai
 langchain_text_splitters
+sentence-transformers
