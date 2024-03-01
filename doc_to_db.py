@@ -7,7 +7,7 @@ from langchain.embeddings import SentenceTransformerEmbeddings
 
 ## Load documents
 
-source_path = "/RAG docs/"
+source_path = "RAG docs/"
 md_loader = DirectoryLoader(source_path+'md')
 
 md_documents = md_loader.load()
