@@ -4,7 +4,7 @@ from langchain.vectorstores import FAISS
 from openai import OpenAI
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
-db = FAISS.load_local('/faiss_index', embeddings)
+db = FAISS.load_local('faiss_index', embeddings)
 api_key = "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"
 
 
