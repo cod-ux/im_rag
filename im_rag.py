@@ -70,6 +70,10 @@ Ask away...
 
 """
 
+if 'key' not in st.session_state:
+    st.session_state.key = 'value'
+    
+
 if "messages" not in st.session_state.keys():
     st.session_state.messages = [{
         "role": "assisstant", 
