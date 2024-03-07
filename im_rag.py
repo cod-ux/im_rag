@@ -2,6 +2,9 @@ from langchain.embeddings import SentenceTransformerEmbeddings
 import streamlit as st
 from langchain.vectorstores import FAISS
 from openai import OpenAI
+import phoenix as px
+from phoenix.trace.openai import OpenAIInstrumentor
+
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
 db = FAISS.load_local('faiss_index', embeddings)
@@ -10,8 +13,10 @@ api_key = st.secrets["OPENAI_API_KEY"]
 
 client = OpenAI(api_key=api_key)
 
+OpenAIInstrumentor().instrument()
+
 def gather_results(query, db):
-    results = db.similarity_search_with_relevance_scores(query, k=3)
+    results = db.similarity_search_with_relevance_scores(query, k=2)
 
     return results
 
