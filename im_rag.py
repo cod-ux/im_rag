@@ -11,7 +11,6 @@ api_key = st.secrets["OPENAI_API_KEY"]
 
 client = OpenAI(api_key=api_key)
 
-OpenAIInstrumentor().instrument()
 
 def gather_results(query, db):
     results = db.similarity_search_with_relevance_scores(query, k=2)
