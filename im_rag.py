@@ -2,8 +2,6 @@ from langchain.embeddings import SentenceTransformerEmbeddings
 import streamlit as st
 from langchain.vectorstores import FAISS
 from openai import OpenAI
-import phoenix as px
-from phoenix.trace.openai import OpenAIInstrumentor
 
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
