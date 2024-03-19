@@ -5,7 +5,7 @@ from openai import OpenAI
 
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
-db = FAISS.load_local('faiss_index', embeddings)
+db = FAISS.load_local('faiss_index', embeddings, allow_dangerous_deserialization=True)
 api_key = st.secrets["OPENAI_API_KEY"]
 
 
