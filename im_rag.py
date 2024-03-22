@@ -1,19 +1,18 @@
 from langchain.embeddings import SentenceTransformerEmbeddings
 import streamlit as st
-from langchain.vectorstores import FAISS
+from langchain.vectorstores.faiss import FAISS
 from openai import OpenAI
-import phoenix as px
-from phoenix.trace.openai import OpenAIInstrumentor
 
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
-db = FAISS.load_local('faiss_index', embeddings)
+path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/"
+github_path = "/embeddings/"
+
+db = FAISS.load_local(github_path+'faiss_index', embeddings, allow_dangerous_deserialization=True)
 api_key = st.secrets["OPENAI_API_KEY"]
 
 
 client = OpenAI(api_key=api_key)
-
-OpenAIInstrumentor().instrument()
 
 def gather_results(query, db):
     results = db.similarity_search_with_relevance_scores(query, k=2)
@@ -121,7 +120,3 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(response)
 
 
-
-## Work to be done
-# Unfuck the prompt template
-# Craft a better CV & portfolio doc, include cover letter, Include read me of projects
