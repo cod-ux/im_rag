@@ -5,10 +5,14 @@ from openai import OpenAI
 
 
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
+
 path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/"
 github_path = "/embeddings/"
 
 db = FAISS.load_local(github_path+'faiss_index', embeddings, allow_dangerous_deserialization=True)
+
+db = FAISS.load_local('faiss_index', embeddings, allow_dangerous_deserialization=True)
+
 api_key = st.secrets["OPENAI_API_KEY"]
 
 
