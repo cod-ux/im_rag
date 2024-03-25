@@ -1,5 +1,5 @@
 from langchain.document_loaders import DirectoryLoader
-from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import SentenceTransformerEmbeddings
 from sentence_transformers import SentenceTransformer
@@ -35,13 +35,23 @@ mark_down_splitter = MarkdownHeaderTextSplitter(headers_to_split_on = [
     ("###", "Header 3"),
 ])
 
+character_text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size = 700,
+    chunk_overlap = 200,
+    length_function = len,
+    is_separator_regex = False,
+)
+
 content = [doc.page_content for doc in md_documents]
 seperator = " \n\n"
 content = seperator.join(content)
 
-text_chunks = mark_down_splitter.split_text(content)
+#text_chunks = mark_down_splitter.split_text(content)
+text_chunks = character_text_splitter.split_text(content)
+text_chunks = character_text_splitter.create_documents(text_chunks)
 
-print("No. of text, chunks: ", len(text_chunks))
+
+print("No. of text chunks: ", len(text_chunks))
 
 ## Embed and export text_chunks to faiss_index - For im_rag retrieval
 

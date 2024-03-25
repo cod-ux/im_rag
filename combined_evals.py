@@ -44,7 +44,7 @@ session = px.launch_app()
 embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
 emb_model = SentenceTransformer('sentence-transformers/all-MiniLM-L12-v2')
 db = FAISS.load_local('/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/faiss_index', embeddings, allow_dangerous_deserialization=True)
-retriever = db.as_retriever()
+retriever = db.as_retriever(search_kwargs={"k": 4})
 
 secrets_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/secrets.toml"
 
@@ -81,6 +81,7 @@ for query in queries:
     result = chain.invoke(query)
     answer.append(result["result"])
     contexts.append([r.page_content for r in result["source_documents"]])
+    print("No of source documents retrieved: ", len(result["source_documents"]))
 
 results = {
     "question": [q for q in queries],
@@ -112,7 +113,7 @@ hallucination_eval, qa_correctness_eval = run_evals(
 relevance_eval = run_evals(
     dataframe=documents_retrieved,
     evaluators=[rel_evaluator],
-    provide_explanation=True,
+    provide_explanation=False,
 )[0]
 
 
@@ -181,3 +182,18 @@ with pd.ExcelWriter(evals_file) as writer:
 
 
 print("...Program terminated")
+
+"""
+1. Documentation - Quick description of the application, naive RAG application, shortcomings, tool used - phoenix, ragas, demo of application
+2. Documentation in the form of pptx
+3. Presentation in April beginning (tent)
+4. Before and after evals - Screenshot after each improvement
+"""
+
+"""
+Improvements:
+1. Breaking down chunks
+2. 4 Chunks retrieval
+3. Put in more content
+4. Prompt engineering - work on the prompt templates
+""" 

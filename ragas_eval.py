@@ -112,17 +112,3 @@ out_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/evals/ragas_evals
 with pd.ExcelWriter(out_path) as writer:
     evals_output.to_excel(writer, sheet_name="evals", index=True)
 
-"""
-1. Documentation - Quick description of the application, naive RAG application, shortcomings, tool used - phoenix, ragas, demo of application
-2. Documentation in the form of pptx
-3. Presentation in April beginning (tent)
-4. Before and after evals - Screenshot after each improvement
-"""
-
-"""
-Improvements:
-1. Breaking down chunks
-2. 4 Chunks retrieval
-3. Put in more content
-4. Prompt engineering - work on the prompt templates
-""" 
