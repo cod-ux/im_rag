@@ -36,15 +36,16 @@ mark_down_splitter = MarkdownHeaderTextSplitter(headers_to_split_on = [
 ])
 
 character_text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 700,
+    chunk_size = 600,
     chunk_overlap = 200,
     length_function = len,
     is_separator_regex = False,
 )
 
 content = [doc.page_content for doc in md_documents]
-seperator = " \n\n"
+seperator = "\n"
 content = seperator.join(content)
+
 
 #text_chunks = mark_down_splitter.split_text(content)
 text_chunks = character_text_splitter.split_text(content)

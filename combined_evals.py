@@ -77,8 +77,9 @@ queries = query_df["queries"].tolist()
 # Generate ragas database for eval
 answer = []
 contexts = []
+prompt_wrapper = """\n\nHere is the user's question: {}"""
 for query in queries:
-    result = chain.invoke(query)
+    result = chain.invoke(prompt_wrapper.format(query))
     answer.append(result["result"])
     contexts.append([r.page_content for r in result["source_documents"]])
     print("No of source documents retrieved: ", len(result["source_documents"]))
@@ -192,8 +193,8 @@ print("...Program terminated")
 
 """
 Improvements:
-1. Breaking down chunks
-2. 4 Chunks retrieval
+1. Breaking down chunks - done
+2. 4 Chunks retrieval - done
 3. Put in more content
 4. Prompt engineering - work on the prompt templates
 """ 
