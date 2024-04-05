@@ -45,6 +45,14 @@ for query in query_df["queries"]:
 
 query_df["query_vector"] = query_vector
 
+# reference_df - text, vector
+
+truth_vector = []
+for truth in query_df["ground truth"]:
+    truth_vector.append(emb_model.encode(truth))
+
+query_df["truth vector"] = truth_vector
+
 # corpus_df - text, vector
 corpus_df = pd.read_excel(corpus_path)
 
@@ -57,7 +65,8 @@ corpus_df["text_vector"] = text_vector
 query_schema = px.Schema(
     prompt_column_names=px.EmbeddingColumnNames(
         raw_data_column_name="queries", vector_column_name="query_vector"
-    )
+    ),
+    response_column_names="ground truth"
 )
 
 corpus_schema = px.Schema(
@@ -66,9 +75,16 @@ corpus_schema = px.Schema(
     )
 )
 
+reference_schema = px.Schema(
+    prompt_column_names=px.EmbeddingColumnNames(
+        raw_data_column_name="ground truth", vector_column_name="truth vector"
+    )
+)
+
 session = px.launch_app(
     primary=px.Dataset(query_df, query_schema, "query"),
-    corpus=px.Dataset(corpus_df.reset_index(drop=True), corpus_schema, "corpus")
+    corpus=px.Dataset(corpus_df.reset_index(drop=True), corpus_schema, "corpus"),
+    reference=px.Dataset(query_df, reference_schema, "ground truth")
 )
 
 keyboard_input = input("Terminate program with keyboard input:  ")

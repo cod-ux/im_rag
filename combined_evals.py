@@ -29,6 +29,10 @@ from ragas.metrics import (
     faithfulness,
     answer_relevancy,
     context_utilization,
+    context_precision,
+    answer_correctness,
+    context_recall,
+    context_relevancy
 )
 
 import os
@@ -73,13 +77,14 @@ print("Session Url: ", session.url)
 queries_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/eval_utils/queries.xlsx"
 query_df = pd.read_excel(queries_path)
 queries = query_df["queries"].tolist()
+ground_truth = query_df["ground truth"].tolist()
 
 # Generate ragas database for eval
 answer = []
 contexts = []
-prompt_wrapper = """\n\nHere is the user's question: {}"""
+#prompt_wrapper = """\n\nHere is the user's question: {}"""
 for query in queries:
-    result = chain.invoke(prompt_wrapper.format(query))
+    result = chain.invoke(query)
     answer.append(result["result"])
     contexts.append([r.page_content for r in result["source_documents"]])
     print("No of source documents retrieved: ", len(result["source_documents"]))
@@ -87,7 +92,8 @@ for query in queries:
 results = {
     "question": [q for q in queries],
     "answer": [a for a in answer],
-    "contexts": [c for c in contexts]
+    "contexts": [c for c in contexts],
+    "ground_truth": [g for g in ground_truth],
 }
 
 # Generate response dataframes for tracing eval
@@ -140,7 +146,11 @@ evaluation_result = evaluate(
     metrics=[
         faithfulness,
         answer_relevancy,
-        context_utilization
+        context_utilization,
+        answer_correctness,
+        context_precision,
+        context_recall,
+        context_relevancy
     ]
 )
 
@@ -161,7 +171,7 @@ for eval_name in eval_scores_df.columns:
 termination_input = input("Terminate program")
 
 # Export evaluations to excel
-evals_file = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/evals/combined_evals.xlsx"
+evals_file = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/"
 
 hall_eval_xl = pd.merge(qa_with_ref, hallucination_eval, on="context.span_id", how="left")
 qa_corr_xl = pd.merge(qa_with_ref, qa_correctness_eval, on="context.span_id", how="left")
@@ -175,12 +185,18 @@ combined_evals.rename(columns={"label": "hallucination", "score": "h_score"}, in
 combined_evals = pd.merge(combined_evals, qa_correctness_eval[["label", "score"]], on="context.span_id", how="left")
 combined_evals.rename(columns={"label": "qa correctness", "score": "qa_score"}, inplace=True)
 
-combined_evals = pd.merge(combined_evals, ragas_output[["faithfulness", "answer_relevancy", "context_utilization"]], on="context.span_id", how="left")
+combined_evals = pd.merge(combined_evals, ragas_output[["faithfulness", "answer_relevancy", "context_utilization", "context_recall", "context_precision", "answer_correctness", "context_relevancy"]], on="context.span_id", how="left")
 
-with pd.ExcelWriter(evals_file) as writer:
+history_file = input("Input history file name: ")
+
+with pd.ExcelWriter(evals_file + "evals/combined_evals.xlsx") as writer:
     combined_evals.to_excel(writer, sheet_name="combined_evals", index=True)
     rel_eval_xl.to_excel(writer, sheet_name="relevance", index=True)
 
+if history_file:
+  with pd.ExcelWriter(evals_file + "evals_history/" + history_file + ".xlsx") as writer:
+      combined_evals.to_excel(writer, sheet_name="combined_evals", index=True)
+      rel_eval_xl.to_excel(writer, sheet_name="relevance", index=True)
 
 print("...Program terminated")
 

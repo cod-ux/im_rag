@@ -29,15 +29,15 @@ print("No. of docs: ", len(md_documents))
 
 ####### Split documents
 
-mark_down_splitter = MarkdownHeaderTextSplitter(headers_to_split_on = [
+"""mark_down_splitter = MarkdownHeaderTextSplitter(headers_to_split_on = [
     ("#", "Header 1"),
     ("##", "Header 2"),
     ("###", "Header 3"),
-])
+])"""
 
 character_text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 600,
-    chunk_overlap = 200,
+    chunk_size = 900,
+    chunk_overlap = 225,
     length_function = len,
     is_separator_regex = False,
 )
