@@ -3,9 +3,11 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import SentenceTransformerEmbeddings
 from sentence_transformers import SentenceTransformer
+from langchain_openai.embeddings import OpenAIEmbeddings
 
 import pandas as pd
 import os
+import toml
 
 # Remove file paths
 index_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/im_rag/embeddings/faiss_index"
@@ -19,6 +21,13 @@ for file_path in path_checks:
         os.remove(file_path)
 
 ## Load documents
+
+secrets_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/secrets.toml"
+
+model_name = "text-embedding-ada-002"
+model_name_2 = "text-embedding-3-large"
+
+os.environ["OPENAI_API_KEY"] = toml.load(secrets_path)["OPENAI_API_KEY"]
 
 source_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/RAG docs/"
 md_loader = DirectoryLoader(source_path+'md')
@@ -58,7 +67,8 @@ print("No. of text chunks: ", len(text_chunks))
 
 print("Embedding chunks and exporting to faiss...")
 
-embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
+#embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/"
 
 db = FAISS.from_documents(text_chunks, embeddings)

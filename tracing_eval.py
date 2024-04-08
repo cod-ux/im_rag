@@ -101,7 +101,7 @@ px.Client().log_evaluations(
 )
 
 evals_file = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/evals/evals.xlsx"
-if os.path.exists(evals_file):
+"""if os.path.exists(evals_file):
     os.remove(evals_file)
 
 # Export evaluations to excel
@@ -113,7 +113,7 @@ with pd.ExcelWriter(evals_file) as writer:
     hall_eval_xl.to_excel(writer, sheet_name="hallucination", index=True)
     qa_corr_xl.to_excel(writer, sheet_name="qa_correctness", index=True)
     rel_eval_xl.to_excel(writer, sheet_name="relevance", index=True)
-
+"""
 
 termination_input = input("Terminate program")
 

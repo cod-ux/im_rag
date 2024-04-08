@@ -5,6 +5,9 @@ from langchain.chat_models import ChatOpenAI
 from sentence_transformers import SentenceTransformer
 from langchain.document_loaders import DirectoryLoader
 from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain.prompts.chat import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
+from langchain_openai.embeddings import OpenAIEmbeddings
 
 from phoenix.trace.langchain import LangChainInstrumentor
 from phoenix.trace import (
@@ -28,11 +31,9 @@ from ragas.evaluation import evaluate
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
-    context_utilization,
     context_precision,
     answer_correctness,
     context_recall,
-    context_relevancy
 )
 
 import os
@@ -44,21 +45,30 @@ from datasets import Dataset
 # Launch Phoenix
 session = px.launch_app()
 
-# Load vectorstore as retriever for chain
-embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
-emb_model = SentenceTransformer('sentence-transformers/all-MiniLM-L12-v2')
-db = FAISS.load_local('/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/faiss_index', embeddings, allow_dangerous_deserialization=True)
-retriever = db.as_retriever(search_kwargs={"k": 4})
+model_name = "text-embedding-ada-002"
+model_name_2 = "text-embedding-3-large"
 
 secrets_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/secrets.toml"
 
-# Load llm for chain
 os.environ["OPENAI_API_KEY"] = toml.load(secrets_path)["OPENAI_API_KEY"]
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Load vectorstore as retriever for chain
+#embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
+#emb_model = SentenceTransformer('sentence-transformers/all-MiniLM-L12-v2')
+embeddings = OpenAIEmbeddings(model=model_name_2)
+db = FAISS.load_local('/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/faiss_index', embeddings, allow_dangerous_deserialization=True)
+retriever = db.as_retriever(search_kwargs={"k": 4})
+
+# Load llm for chain
 
 llm = ChatOpenAI(
     model_name = "gpt-3.5-turbo",
 )
+
+
+#system_prompt = PromptTemplate(input_variables=["context"], template=sys_template)
+#chain.combine_documents_chain.llm_chain.prompt.messages[0] = SystemMessagePromptTemplate(prompt=system_prompt)
 
 # Create retrieval chain
 chain = RetrievalQA.from_chain_type(
@@ -82,9 +92,9 @@ ground_truth = query_df["ground truth"].tolist()
 # Generate ragas database for eval
 answer = []
 contexts = []
-#prompt_wrapper = """\n\nHere is the user's question: {}"""
+prompt_wrapper = """Answer this question about Surya in an accurate manner: {}"""
 for query in queries:
-    result = chain.invoke(query)
+    result = chain.invoke(prompt_wrapper.format(query))
     answer.append(result["result"])
     contexts.append([r.page_content for r in result["source_documents"]])
     print("No of source documents retrieved: ", len(result["source_documents"]))
@@ -146,11 +156,9 @@ evaluation_result = evaluate(
     metrics=[
         faithfulness,
         answer_relevancy,
-        context_utilization,
         answer_correctness,
         context_precision,
         context_recall,
-        context_relevancy
     ]
 )
 
@@ -185,7 +193,7 @@ combined_evals.rename(columns={"label": "hallucination", "score": "h_score"}, in
 combined_evals = pd.merge(combined_evals, qa_correctness_eval[["label", "score"]], on="context.span_id", how="left")
 combined_evals.rename(columns={"label": "qa correctness", "score": "qa_score"}, inplace=True)
 
-combined_evals = pd.merge(combined_evals, ragas_output[["faithfulness", "answer_relevancy", "context_utilization", "context_recall", "context_precision", "answer_correctness", "context_relevancy"]], on="context.span_id", how="left")
+combined_evals = pd.merge(combined_evals, ragas_output[["faithfulness", "answer_relevancy", "context_recall", "context_precision", "answer_correctness"]], on="context.span_id", how="left")
 
 history_file = input("Input history file name: ")
 
