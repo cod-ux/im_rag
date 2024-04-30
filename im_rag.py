@@ -6,6 +6,9 @@ from langchain.chat_models import ChatOpenAI
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 
+import os
+import toml
+
 
 model_name = "text-embedding-ada-002"
 model_name_2 = "text-embedding-3-large"
@@ -13,6 +16,10 @@ model_name_2 = "text-embedding-3-large"
 path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/"
 github_path = "embeddings/"
 
+secrets_path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/secrets.toml"
+github_secrets = "secrets.toml"
+
+os.environ["OPENAI_API_KEY"] = toml.load(github_secrets)["OPENAI_API_KEY"]
 
 embeddings = OpenAIEmbeddings(model=model_name_2)
 db = FAISS.load_local('/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/faiss_index', embeddings, allow_dangerous_deserialization=True)
