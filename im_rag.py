@@ -2,66 +2,42 @@ from langchain.embeddings import SentenceTransformerEmbeddings
 import streamlit as st
 from langchain.vectorstores.faiss import FAISS
 from openai import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
 
 
-embeddings = SentenceTransformerEmbeddings(model_name='all-MiniLM-L6-v2')
+model_name = "text-embedding-ada-002"
+model_name_2 = "text-embedding-3-large"
 
 path = "/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/"
 github_path = "embeddings/"
 
-db = FAISS.load_local(github_path+'faiss_index', embeddings, allow_dangerous_deserialization=True)
 
-api_key = st.secrets["OPENAI_API_KEY"]
+embeddings = OpenAIEmbeddings(model=model_name_2)
+db = FAISS.load_local('/Users/suryaganesan/Documents/GitHub/im_rag/im_rag/embeddings/faiss_index', embeddings, allow_dangerous_deserialization=True)
+retriever = db.as_retriever(search_kwargs={"k": 4})
+
+# Load llm for chain
+
+llm = ChatOpenAI(
+    model_name = "gpt-3.5-turbo",
+)
 
 
-client = OpenAI(api_key=api_key)
+#system_prompt = PromptTemplate(input_variables=["context"], template=sys_template)
+#chain.combine_documents_chain.llm_chain.prompt.messages[0] = SystemMessagePromptTemplate(prompt=system_prompt)
 
-def gather_results(query, db):
-    results = db.similarity_search_with_relevance_scores(query, k=2)
+# Create retrieval chain
+chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff",
+    retriever=retriever,
+    return_source_documents=False,
+    metadata={"application_type": "question_answering"},
+)
 
-    return results
-
-def pass_to_llm(results, query, success):
-    mod_results = [doc.page_content for doc, rel_sc in results]
-    seperator = '\\n'
-    context = seperator.join(mod_results)
-
-    system_prompt = "You are a helpful chatbot that replies to user questions on Surya Ganesan's education and professional experience"
-
-    user_prompt_1 = f"""
-    Here is the user's question:
-    {query}
-
-    Here is some relevant text from Surya's CV to answer the user's question. Use the information below to answer their question:
-    {context}
-    """
-    user_prompt_0 = f"""
-    Here is the user's question:
-    {query}
-
-    There is not any relevant answer to this question. But use the following information from your CV to give an acceptable answer:
-    {context}
-
-    """
-
-    if success == 1:
-       response = client.chat.completions.create(
-          model = "gpt-3.5-turbo",
-          messages = [{'role': 'system', 'content': system_prompt},
-          {'role': 'user', 'content': user_prompt_1}
-          ]
-       )
-
-    else:
-        response = client.chat.completions.create(
-          model = "gpt-3.5-turbo",
-          messages = [{'role': 'system', 'content': system_prompt},
-          {'role': 'user', 'content': user_prompt_0}
-          ]
-       )
-
-    return response.choices[0].message.content
-
+prompt_wrapper = """Answer this question about Surya in an accurate manner: {}"""
 
 ## Get Query
 
@@ -105,20 +81,11 @@ if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
       with st.spinner("Thinking..."):
         placeholder = st.empty()
-        results = gather_results(query=query, db=db)
-        score_a = results[0][1]
-        doc_a = results[0][0]
-        if score_a < 0.3:
-            response = pass_to_llm(results, query, 0)
-            message = {"role": "assistant", "content": response}
-            st.session_state.messages.append(message)
-            placeholder.markdown(response)
+        response = chain.invoke(prompt_wrapper.format(query))["result"]
+        message = {"role": "assistant", "content": response}
+        st.session_state.messages.append(message)
+        placeholder.markdown(response)
         
-        else:
-            response = pass_to_llm(results, query, 1)
-            placeholder = st.empty()
-            message = {"role": "assistant", "content": response}
-            st.session_state.messages.append(message)
-            placeholder.markdown(response)
+
 
 
