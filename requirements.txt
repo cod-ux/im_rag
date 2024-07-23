@@ -5,3 +5,4 @@ openai
 langchain_text_splitters
 sentence-transformers
 langchain-community
+langchain_openai
